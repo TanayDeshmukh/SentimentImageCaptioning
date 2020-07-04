@@ -26,7 +26,9 @@ def train(train_loader, encoder, decoder, criterion, encoder_optimizer, decoder_
         caption_lengths = caption_lengths.to(device)
 
         images = encoder(images)
-        outputs, sorted_captions, decode_lengths, alphas, sorted_indices = decoder(images, captions, caption_lengths)
+        outputs, sorted_captions, decode_lengths, alphas, sorted_indices = decoder(images, captions, caption_lengths, context = 1)
+
+        break
 
         # Remove <start>
         target_captions = sorted_captions[:, 1:]

@@ -17,6 +17,7 @@ data_name = 'flickr8k_5_captions_per_image_5_minimum_word_frequency'  # base nam
 embedding_dimension = 512  # dimension of word embeddings
 hidden_dimension = 512  # dimension of decoder RNN
 attention_dimension = 512
+context_vector_dimension = 512
 dropout = 0.5
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -61,7 +62,8 @@ def main():
                             hidden_dimension = hidden_dimension,
                             vocab_size = len(word_map),
                             device = device,
-                            dropout = dropout)                            
+                            context_vector_dimension = context_vector_dimension,               
+                            dropout = dropout)
         decoder_optimizer = torch.optim.Adam(params=filter(lambda p : p.requires_grad, decoder.parameters()),
                                                 lr=training_parameters.decoder_lr)
 
@@ -80,6 +82,7 @@ def main():
                             hidden_dimension = hidden_dimension,
                             vocab_size = len(word_map),
                             device = device,
+                            context_vector_dimension = context_vector_dimension,
                             dropout = dropout)
         decoder.load_state_dict(checkpoint['decoder_state_dict'])
         decoder_optimizer = checkpoint['decoder_optimizer']
@@ -110,6 +113,7 @@ def main():
 
         if training_parameters.epochs_since_improvement == 20:
             break
+            
         if training_parameters.epochs_since_improvement > 0  and training_parameters.epochs_since_improvement % 8 == 0:
             adjust_learning_rate(decoder_optimizer, 0.8)
             if training_parameters.fine_tune_encoder:
@@ -124,6 +128,8 @@ def main():
               epoch = epoch,
               device = device,
               training_parameters = training_parameters)
+
+        break
 
         recent_bleu4_score = validate(validation_loader = validation_dataloader,
                                     encoder = encoder,
@@ -142,9 +148,7 @@ def main():
             training_parameters.epochs_since_improvement = 0
         
         save_checkpoint(data_name, epoch, training_parameters.epochs_since_improvement, encoder, decoder,
-                        encoder_optimizer, decoder_optimizer, recent_bleu4_score, is_best_score)
-
-        
+                        encoder_optimizer, decoder_optimizer, recent_bleu4_score, is_best_score)       
 
 if __name__ =='__main__':
     main()

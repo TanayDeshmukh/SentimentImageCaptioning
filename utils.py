@@ -129,6 +129,39 @@ def create_input_files(dataset, karpathy_json_path, image_folder,
                 json.dump(caption_lengths, j)
 
 
+def create_sentiment_input_files(dataset, karpathy_json_path, image_folder, anp_file_path, 
+                                captions_per_image, min_word_freq, ouput_folder, max_len = 100):
+    
+    with open(karpathy_json_path, 'r') as f:
+        data = json.load(f)
+
+    train_image_paths = []
+    positive_train_captions = []
+    negative_train_captions = []
+
+    valid_image_paths = []
+    positive_valid_captions = []
+    negative_valid_captions = []
+
+    test_image_paths = []
+    positive_test_captions = []
+    negative_test_captions = []
+
+    word_frequency = Counter()
+
+    images = data['images']
+
+    for i in range(len(images)):
+
+        image = images[i]
+
+        for sentence in image['sentences']:
+            blob = TextBlob(sentence['raw'])
+            
+        
+        break
+
+
 def clip_gradient(optimizer, grad_clip):
     """
     Clips gradients computed during backpropagation to avoid explosion of gradients.

@@ -87,7 +87,8 @@ class Attention(nn.Module):
 
 class Decoder(nn.Module):
     
-    def __init__(self, attention_dimension, embedding_dimension, hidden_dimension, vocab_size, device, encoder_dimension=2048, dropout = 0.5):
+    def __init__(self, attention_dimension, embedding_dimension, hidden_dimension, 
+                    vocab_size, device, context_vector_dimension, encoder_dimension=2048, dropout = 0.5,):
         '''
         :param embedding_dimension : embedding size
         :param hidden_dimension : size of the decoder's RNN
@@ -102,6 +103,7 @@ class Decoder(nn.Module):
         self.hidden_dimension = hidden_dimension
         self.vocab_size = vocab_size
         self.encoder_dimension = encoder_dimension
+        self.context_vector_dimension = context_vector_dimension 
         self.dropout = dropout
         self.device = device
 
@@ -159,11 +161,12 @@ class Decoder(nn.Module):
 
         return h, c
 
-    def forward(self, encoder_output, encoded_captions, caption_lengths):
+    def forward(self, encoder_output, encoded_captions, caption_lengths, context = None):
         '''
         :param encoder_output : encoded image, a tensor of size (batch size, encoded_image_size, encoded_image_size, encoder_dimension)
         :param encoded_captions : encoded captions, a tensor of size (batch_size, max_caption_length)
         :param caption_lengths : caption lengths, a tensor of size (batch size, 1)
+        :param context : context is 1 if target is a positive caption, 0 if otherwise( ie. negative caotion)
         :return : socres for vocabulary, sorted encoded captions, decode length, weights, sort indices 
         '''
 
@@ -188,10 +191,19 @@ class Decoder(nn.Module):
         outputs = torch.empty((batch_size, max(decode_lengths), self.vocab_size)).to(self.device)
         alphas = torch.zeros((batch_size, max(decode_lengths), number_of_pixels)).to(self.device)
 
+        # Initialize context vector
+        context_vextor = torch.tensor([[context] * self.context_vector_dimension] * batch_size)
+        context_vextor = context_vextor.to(self.device)
+
+        print(context_vextor.shape)
+
         for t in range(max(decode_lengths)):
             batch_size_t = sum([l > t for l in decode_lengths])
             attention_weighted_encoding, alpha = self.attention(encoder_output[ : batch_size_t],
                                                                 hidden_state[ : batch_size_t])
+
+            print(embeded_captions[: batch_size_t, t, :].shape, attention_weighted_encoding.shape)
+            return 1, 1, 1, 1, 1
             
             gate = self.sigmoid(self.f_beta(hidden_state[:batch_size_t]))
             attention_weighted_encoding = gate * attention_weighted_encoding
